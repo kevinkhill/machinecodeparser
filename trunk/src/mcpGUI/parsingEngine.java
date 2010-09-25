@@ -2,9 +2,9 @@ package mcpGUI;
 
 import java.io.*;
 import java.util.logging.*;
+import java.util.regex.*;
 
 public class parsingEngine {
-
     private cncProgram program;
 
     private String inputFilePath = "";;
@@ -27,6 +27,10 @@ public class parsingEngine {
 
         dirStructure = null;
         program = null;
+    }
+
+    public static String cleanFilename(String fn) {
+        return fn.replaceAll("[\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]", "").replace(" ", "_");
     }
 
     public void setInputFilePath(String str) {
