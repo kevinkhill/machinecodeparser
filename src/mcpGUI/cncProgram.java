@@ -33,7 +33,7 @@ public class cncProgram {
 
     public Boolean writeFile() throws IOException {
         if(odSet == true) {
-            programTitle = programTitle.replace("(" ,"").replace(");" ,"");
+            programTitle = parsingEngine.cleanFilename(programTitle);
 
             try {
                 String outputString = outputDir + "\\\\" + programTitle + ".txt";
