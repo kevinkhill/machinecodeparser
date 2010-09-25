@@ -10,10 +10,8 @@ public class parsingEngine {
     private String inputFilePath = "";;
     private String outputDirPath = "";;
     private File inputFile;
-    private File outputFile;
 
     private Boolean dirStructure;
-    private String error = "";;
 
     private FileInputStream fis;
     private BufferedInputStream bis;
@@ -26,10 +24,8 @@ public class parsingEngine {
         dis = null;
 
         inputFile = null;
-        outputFile = null;
 
         dirStructure = null;
-        error = null;
         program = null;
     }
 
