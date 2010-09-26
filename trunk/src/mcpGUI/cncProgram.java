@@ -31,7 +31,7 @@ public class cncProgram {
         odSet = true;
     }
 
-    public Boolean writeFile() throws IOException {
+    public String writeToFile() throws IOException {
         if(odSet == true) {
             programTitle = parsingEngine.cleanFilename(programTitle);
 
@@ -43,11 +43,11 @@ public class cncProgram {
                 }
             } catch (IOException ex) {
                 Logger.getLogger(parsingEngine.class.getName()).log(Level.SEVERE, null, ex);
-                return false;
+                return ex.getMessage();
             }
-            return true;
+            return "Successfully wrote \"" + programTitle + "\" to file.";
         } else {
-            return false;
+            return "Output directory not set";
         }
     }
 
