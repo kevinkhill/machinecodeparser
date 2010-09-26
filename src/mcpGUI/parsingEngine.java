@@ -1,14 +1,14 @@
 package mcpGUI;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.logging.*;
-import java.util.regex.*;
 
 public class parsingEngine {
     private cncProgram program;
 
-    private String inputFilePath = "";;
-    private String outputDirPath = "";;
+    private String inputFilePath = "";
+    private String outputDirPath = "";
     private File inputFile;
 
     private Boolean dirStructure;
@@ -17,6 +17,12 @@ public class parsingEngine {
     private BufferedInputStream bis;
     private DataInputStream dis;
 
+    private static String fnCleanRegex = "[\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";
+
+    private String programNumber = "O[0-9]{5}[ ]*;";
+    private String programNumberWithComment = "O[0-9]{5}[ ]*\\(.*\\);";
+    private String comment = "\\(.*\\);";
+    private String inlineComment = "(O[0-9]{5}[ ]*)(\\(.*\\))(;)";
 
     public void parsingEngine() {
         fis = null;
@@ -30,7 +36,9 @@ public class parsingEngine {
     }
 
     public static String cleanFilename(String fn) {
-        return fn.replaceAll("[\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]", "").replace(" ", "_");
+        String tmp = fn.replaceAll(fnCleanRegex, "");
+        tmp = tmp.trim();
+        return tmp.replace(" ", "_");
     }
 
     public void setInputFilePath(String str) {
@@ -56,47 +64,57 @@ public class parsingEngine {
             bis = new BufferedInputStream(fis);
             dis = new DataInputStream(bis);
 
-            String tmp = "";
+            String currentLine = "";
 
             Boolean started = false;
             Boolean nameSet = false;
+            String workingProg = "";
             int count = 0;
 
             while (dis.available() != 0) {
-                tmp = dis.readLine();
+                currentLine = dis.readLine();
 
-                if(tmp.matches("%") == true) {
-                    if(started == false) {
-                        started = true;
-                        count++;
-                        program = new cncProgram();
-                    } else {
-                        nameSet = false;
-                        started = false;
-                        program.addLine(tmp);
-                        program.setOutputDir(outputDirPath);
-                        
-                        Boolean t = program.writeFile();
-                        misc.log(t.toString());
-                        //misc.log(program.toString(count));
+                if(currentLine.matches(programNumber) || currentLine.matches(programNumberWithComment)) {
+                    if(currentLine.matches(programNumber)) {
+                        if(!started) {
+                            started = true;
+                            count++;
+                            program = new cncProgram();
+                        } else {
+                            nameSet = false;
+                            started = false;
+                            program.addLine(currentLine);
+                            program.addLine("%");
+                            program.setOutputDir(outputDirPath);
+
+                            String result = program.writeToFile();
+                            misc.log(result);
+                        }
+
+                        program.addLine("%");
+                        program.addLine(currentLine);
                     }
 
-                    program.addLine(tmp);
+                    if(currentLine.matches(programNumberWithComment)){
+                        program.setTitle(currentLine.replaceFirst(inlineComment, "$2"));
+                        nameSet = true;
+                    }
+
+                    program.addLine("%");
+                    program.addLine(currentLine);
                 } else {
                     if(started == true && nameSet == false){
-                        String check = tmp.substring(0, 1);
-
-                        if(check.equals("(")) {
-                            program.setTitle(tmp);
+                        if(currentLine.matches(comment)) {
+                            program.setTitle(currentLine);
                             nameSet = true;
                         }
                     }
 
-                    program.addLine(tmp);
+                    program.addLine(currentLine);
                 }
             }
 
-            misc.log("\nDONE");
+            misc.log("Processed " + count + " programs");
 
             fis.close();
             bis.close();
