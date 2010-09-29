@@ -11,6 +11,7 @@ public class mcpWin extends javax.swing.JFrame {
     /** Creates new form mcpWin */
     public mcpWin() {
         initComponents();
+        engine = new parsingEngine();
         if(debug) {
             f_inputFilePath.setText("R:\\My Desktop\\parseTest.txt");
             f_outputDirPath.setText("R:\\My Desktop\\testOutput");
@@ -188,7 +189,6 @@ public class mcpWin extends javax.swing.JFrame {
                 l_status.setText("Error: Input File Needed");
             } else {
                 try {
-                    engine = new parsingEngine();
                     engine.setInputFilePath(f_inputFilePath.getText());
                     engine.setOutputDirPath(f_outputDirPath.getText());
                     engine.run();

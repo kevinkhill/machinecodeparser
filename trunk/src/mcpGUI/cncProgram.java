@@ -9,9 +9,11 @@ public class cncProgram {
     private String contents = "";
     private String outputDir = "";
     private Boolean odSet;
+    private Boolean titleSet;
 
-    public void cncProgram() {
+    public cncProgram() {
         odSet = false;
+        titleSet = false;
     }
 
     public void setTitle(String str) {
