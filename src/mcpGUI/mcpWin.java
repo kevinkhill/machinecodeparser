@@ -6,12 +6,13 @@ import javax.swing.JFileChooser;
 
 public class mcpWin extends javax.swing.JFrame {
 
-    private Boolean debug = true;
+    private Boolean debug = false;
 
     /** Creates new form mcpWin */
     public mcpWin() {
         initComponents();
         engine = new parsingEngine();
+        
         if(debug) {
             f_inputFilePath.setText("R:\\My Desktop\\parseTest.txt");
             f_outputDirPath.setText("R:\\My Desktop\\testOutput");
