@@ -17,8 +17,8 @@ public class parsingEngine {
 
 
     private String programNumberRegex;
+    private String programNumberLineRegex;
     private String programNumberWithCommentRegex;
-    private String commentRegex;
     private String inlineCommentRegex;
     private static String fnCleanRegex = "[\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";;
 
@@ -31,10 +31,10 @@ public class parsingEngine {
         inputFile = null;
         dirStructure = null;
 
-        programNumberRegex = "O[0-9]{5}[ ]*;";
-        programNumberWithCommentRegex = "O[0-9]{5}[ ]*\\(.*\\);";
-        commentRegex = "\\(.*\\);";
+        programNumberRegex = "O[0-9]{5};";
+        programNumberLineRegex = "O[0-9]{5}.*";
         inlineCommentRegex = "(O[0-9]{5}[ ]*)(\\(.*\\))(;)";
+        programNumberWithCommentRegex = "O[0-9]{5}[ ]*\\(.*\\);";
     }
 
     public static String cleanFilename(String fn) {
@@ -69,46 +69,64 @@ public class parsingEngine {
             String currentLine = "";
 
             Boolean started = false;
-            Boolean nameSet = false;
-            String workingProg = "";
+            Boolean getTitle = false;
             int count = 0;
 
             while (dis.available() != 0) {
                 currentLine = dis.readLine();
+                
+                if(currentLine.equals("") != true) {
+                    if(currentLine.matches(programNumberLineRegex)) {
+                       if(started == false) {
+                            started = true;
+                            count++;
+                            program = new cncProgram();
+                        } else {
+                            started = false;
+                            program.addLine("%");
+                            program.setOutputDir(outputDirPath);
 
-                if(currentLine.matches(programNumberRegex) || currentLine.matches(programNumberWithCommentRegex)) {
-                   if(started == false) {
-                        started = true;
-                        count++;
-                        program = new cncProgram();
+                            String result = program.writeToFile();
+                            misc.log(result);
+
+                            count++;
+                            program = new cncProgram();
+                            program.addLine("%");
+                            program.addLine(currentLine);
+                        }
+
+                        if(started == true) {
+                            if(currentLine.matches(programNumberWithCommentRegex)) {
+                                program.addLine("%");
+                                program.addLine(currentLine);
+                                String tmp = currentLine.replaceFirst(inlineCommentRegex, "$2");
+                                program.setTitle(tmp);
+                            }
+                            
+                            if(currentLine.matches("O[0-9]{5};")){
+                                program.addLine("%");
+                                program.addLine(currentLine);
+                                getTitle = true;
+                            }
+                        }
                     } else {
-                        nameSet = false;
-                        started = false;
-                        program.addLine("%");
-                        program.setOutputDir(outputDirPath);
+                        if(started == true) {
+                            if(getTitle == true) {
+                                program.setTitle(currentLine);
+                                getTitle = false;
+                            }
 
-                        String result = program.writeToFile();
-                        misc.log(result);
-
-                        count++;
-                        program = new cncProgram();
+                            program.addLine(currentLine);
+                        }
                     }
-
-                    if(currentLine.matches(programNumberRegex)) {
-                        program.addLine("%");
-                        program.addLine(currentLine);
-                        program.setTitle(dis.readLine());
-                    }
-
-                   if(currentLine.matches(programNumberWithCommentRegex)) {
-                        program.addLine("%");
-                        program.addLine(currentLine);
-                        program.setTitle(currentLine.replace(inlineCommentRegex, "$2"));
-                    }
-                } else {
-                    program.addLine(currentLine);
                 }
             }
+
+            program.addLine("%");
+            program.setOutputDir(outputDirPath);
+
+            String result = program.writeToFile();
+            misc.log(result);
 
             misc.log("Processed " + count + " programs");
 
