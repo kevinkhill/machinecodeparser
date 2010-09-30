@@ -89,10 +89,9 @@ public class parsingEngine {
                             String result = program.writeToFile();
                             misc.log(result);
 
+                            started = true;
                             count++;
                             program = new cncProgram();
-                            program.addLine("%");
-                            program.addLine(currentLine);
                         }
 
                         if(started == true) {
@@ -122,12 +121,10 @@ public class parsingEngine {
                 }
             }
 
-            program.addLine("%");
             program.setOutputDir(outputDirPath);
 
             String result = program.writeToFile();
             misc.log(result);
-
             misc.log("Processed " + count + " programs");
 
             fis.close();
