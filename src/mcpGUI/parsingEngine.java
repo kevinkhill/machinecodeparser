@@ -31,10 +31,10 @@ public class parsingEngine {
         inputFile = null;
         dirStructure = null;
 
-        programNumberRegex = "O[0-9]{5};";
+        programNumberRegex = "O[0-9]{5}[ ]?";
         programNumberLineRegex = "O[0-9]{5}.*";
-        inlineCommentRegex = "(O[0-9]{5}[ ]*)(\\(.*\\))(;)";
-        programNumberWithCommentRegex = "O[0-9]{5}[ ]*\\(.*\\);";
+        inlineCommentRegex = "(O[0-9]{5}[ ]?)(\\(.*\\))([ ]*)";
+        programNumberWithCommentRegex = "O[0-9]{5}[ ]?\\(.*\\)[ ]*";
     }
 
     public static String cleanFilename(String fn) {
@@ -102,7 +102,7 @@ public class parsingEngine {
                                 program.setTitle(tmp);
                             }
                             
-                            if(currentLine.matches("O[0-9]{5};")){
+                            if(currentLine.matches(programNumberRegex)){
                                 program.addLine("%");
                                 program.addLine(currentLine);
                                 getTitle = true;
