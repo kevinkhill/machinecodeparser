@@ -6,7 +6,15 @@ import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 public class mcpWin extends javax.swing.JFrame {
-    /** Creates new form mcpWin */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new mcpWin().setVisible(true);
+            }
+        });
+    }    
+    
+    /** Creates new form mcpWin */    
     public mcpWin() {
         initComponents();
         
@@ -35,6 +43,12 @@ public class mcpWin extends javax.swing.JFrame {
 
         dirChooserFrame = new javax.swing.JFrame();
         dirChooser = new javax.swing.JFileChooser();
+        logFrame = new javax.swing.JFrame();
+        container = new javax.swing.JScrollPane();
+        log = new javax.swing.JTextArea();
+        log_m = new javax.swing.JMenuBar();
+        log_m_file = new javax.swing.JMenu();
+        log_m_file_close = new javax.swing.JMenuItem();
         l_inputFile = new javax.swing.JLabel();
         f_inputFilePath = new javax.swing.JTextField();
         b_inputBrowse = new javax.swing.JButton();
@@ -46,9 +60,11 @@ public class mcpWin extends javax.swing.JFrame {
         l_outputDir = new javax.swing.JLabel();
         sep = new javax.swing.JSeparator();
         progressBar = new javax.swing.JProgressBar();
-        menuBar = new javax.swing.JMenuBar();
-        m_file = new javax.swing.JMenu();
-        m_file_close = new javax.swing.JMenuItem();
+        main_m = new javax.swing.JMenuBar();
+        main_m_file = new javax.swing.JMenu();
+        main_m_file_close = new javax.swing.JMenuItem();
+        main_m_view = new javax.swing.JMenu();
+        main_m_view_log = new javax.swing.JMenuItem();
 
         javax.swing.GroupLayout dirChooserFrameLayout = new javax.swing.GroupLayout(dirChooserFrame.getContentPane());
         dirChooserFrame.getContentPane().setLayout(dirChooserFrameLayout);
@@ -71,9 +87,44 @@ public class mcpWin extends javax.swing.JFrame {
                     .addGap(0, 0, Short.MAX_VALUE)))
         );
 
+        logFrame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        logFrame.setTitle("Log Window");
+        logFrame.setMinimumSize(new java.awt.Dimension(400, 300));
+        logFrame.setName("logFrame"); // NOI18N
+
+        log.setColumns(20);
+        log.setRows(5);
+        container.setViewportView(log);
+
+        log_m_file.setText("File");
+
+        log_m_file_close.setText("Close");
+        log_m_file_close.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                log_m_file_closeActionPerformed(evt);
+            }
+        });
+        log_m_file.add(log_m_file_close);
+
+        log_m.add(log_m_file);
+
+        logFrame.setJMenuBar(log_m);
+
+        javax.swing.GroupLayout logFrameLayout = new javax.swing.GroupLayout(logFrame.getContentPane());
+        logFrame.getContentPane().setLayout(logFrameLayout);
+        logFrameLayout.setHorizontalGroup(
+            logFrameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(container, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+        );
+        logFrameLayout.setVerticalGroup(
+            logFrameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(container, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+        );
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Machine Code Parsing Engine");
         setName("MCpe"); // NOI18N
+        setResizable(false);
 
         l_inputFile.setText("Input File");
 
@@ -109,19 +160,31 @@ public class mcpWin extends javax.swing.JFrame {
 
         l_outputDir.setText("Output Dir");
 
-        m_file.setText("File");
+        main_m_file.setText("File");
 
-        m_file_close.setText("Close");
-        m_file_close.addActionListener(new java.awt.event.ActionListener() {
+        main_m_file_close.setText("Close");
+        main_m_file_close.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                m_file_closeActionPerformed(evt);
+                main_m_file_closeActionPerformed(evt);
             }
         });
-        m_file.add(m_file_close);
+        main_m_file.add(main_m_file_close);
 
-        menuBar.add(m_file);
+        main_m.add(main_m_file);
 
-        setJMenuBar(menuBar);
+        main_m_view.setText("View");
+
+        main_m_view_log.setText("Log");
+        main_m_view_log.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                main_m_view_logActionPerformed(evt);
+            }
+        });
+        main_m_view.add(main_m_view_log);
+
+        main_m.add(main_m_view);
+
+        setJMenuBar(main_m);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -192,8 +255,6 @@ public class mcpWin extends javax.swing.JFrame {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = dirChooser.getSelectedFile();
                 f_inputFilePath.setText(file.getPath());
-                //workingFile = file.getName();
-                //workingPath = file.getPath();
             }
         }
 }//GEN-LAST:event_b_inputBrowseActionPerformed
@@ -211,6 +272,7 @@ public class mcpWin extends javax.swing.JFrame {
                         try {
                             progressBar.setMinimum(0);
                             progressBar.setMaximum(count());
+                            misc.log(""+count());
                             parseFile();
                         } catch (IOException ex) {
                             Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
@@ -230,9 +292,9 @@ public class mcpWin extends javax.swing.JFrame {
         f_outputDirPath.setText("");
     }//GEN-LAST:event_b_resetActionPerformed
 
-    private void m_file_closeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_file_closeActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_m_file_closeActionPerformed
+    private void main_m_file_closeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_main_m_file_closeActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_main_m_file_closeActionPerformed
 
     private void b_outputBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_outputBrowseActionPerformed
         dirChooser = new JFileChooser();
@@ -248,13 +310,13 @@ public class mcpWin extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_b_outputBrowseActionPerformed
 
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new mcpWin().setVisible(true);
-            }
-        });
-    }
+    private void log_m_file_closeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_log_m_file_closeActionPerformed
+        logFrame.setVisible(false);
+    }//GEN-LAST:event_log_m_file_closeActionPerformed
+
+    private void main_m_view_logActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_main_m_view_logActionPerformed
+        logFrame.setVisible(true);
+    }//GEN-LAST:event_main_m_view_logActionPerformed
 
 // ================== MY METHODS =================
     public static String cleanFilename(String fn) {
@@ -392,6 +454,7 @@ public class mcpWin extends javax.swing.JFrame {
     private javax.swing.JButton b_outputBrowse;
     private javax.swing.JButton b_parse;
     private javax.swing.JButton b_reset;
+    private javax.swing.JScrollPane container;
     private javax.swing.JFileChooser dirChooser;
     private javax.swing.JFrame dirChooserFrame;
     private javax.swing.JTextField f_inputFilePath;
@@ -399,9 +462,16 @@ public class mcpWin extends javax.swing.JFrame {
     private javax.swing.JLabel l_inputFile;
     private javax.swing.JLabel l_outputDir;
     private javax.swing.JLabel l_status;
-    private javax.swing.JMenu m_file;
-    private javax.swing.JMenuItem m_file_close;
-    private javax.swing.JMenuBar menuBar;
+    private javax.swing.JTextArea log;
+    private javax.swing.JFrame logFrame;
+    private javax.swing.JMenuBar log_m;
+    private javax.swing.JMenu log_m_file;
+    private javax.swing.JMenuItem log_m_file_close;
+    private javax.swing.JMenuBar main_m;
+    private javax.swing.JMenu main_m_file;
+    private javax.swing.JMenuItem main_m_file_close;
+    private javax.swing.JMenu main_m_view;
+    private javax.swing.JMenuItem main_m_view_log;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JSeparator sep;
     // End of variables declaration//GEN-END:variables
@@ -423,7 +493,7 @@ public class mcpWin extends javax.swing.JFrame {
     private String programNumberLineRegex;
     private String programNumberWithCommentRegex;
     private String inlineCommentRegex;
-    private static String fnCleanRegex = "[\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";
+    private static String fnCleanRegex = "[\\*|\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";
 
 //DEBUGGING
     private Boolean debug = true;
