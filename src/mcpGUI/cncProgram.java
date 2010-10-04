@@ -1,7 +1,6 @@
 package mcpGUI;
 
 import java.io.*;
-import java.util.logging.*;
 
 public class cncProgram {
 
@@ -33,7 +32,7 @@ public class cncProgram {
 
     public String writeToFile() throws IOException {
         if(odSet == true) {
-            programTitle = parsingEngine.cleanFilename(programTitle);
+            programTitle = mcpWin.cleanFilename(programTitle);
 
             try {
                 String outputString = outputDir + "\\\\" + programTitle + ".txt";
@@ -42,7 +41,6 @@ public class cncProgram {
                     writeLineToFile(outputString, lines[a], true);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(parsingEngine.class.getName()).log(Level.SEVERE, null, ex);
                 return ex.getMessage();
             }
             return "Successfully wrote \"" + programTitle + "\" to file.";
