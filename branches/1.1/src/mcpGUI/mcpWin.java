@@ -1,11 +1,11 @@
 package mcpGUI;
 
 import java.io.*;
-import java.util.logging.*;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 public class mcpWin extends javax.swing.JFrame {
+    
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -17,6 +17,7 @@ public class mcpWin extends javax.swing.JFrame {
     /** Creates new form mcpWin */    
     public mcpWin() {
         initComponents();
+        setLocation(25,25);
         
         fis = null;
         bis = null;
@@ -34,7 +35,9 @@ public class mcpWin extends javax.swing.JFrame {
         if(debug) {
             f_inputFilePath.setText("R:\\My Desktop\\parseTest.txt");
             f_outputDirPath.setText("R:\\My Desktop\\testOutput");
-        }        
+        }       
+
+        progressThread = new ProgressThread();
     }
 
     @SuppressWarnings("unchecked")
@@ -93,6 +96,7 @@ public class mcpWin extends javax.swing.JFrame {
         logFrame.setName("logFrame"); // NOI18N
 
         log.setColumns(20);
+        log.setEditable(false);
         log.setRows(5);
         container.setViewportView(log);
 
@@ -262,32 +266,23 @@ public class mcpWin extends javax.swing.JFrame {
     private void b_parseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_parseActionPerformed
         if (evt.getSource() == b_parse) {
             if (f_inputFilePath.getText().equals("")) {
-                l_status.setText("Error: Input File Needed");
+                setStatus("Error: Input File Needed");
             } else {
-                setInputFilePath(f_inputFilePath.getText());
-                setOutputDirPath(f_outputDirPath.getText());
-                
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        try {
-                            progressBar.setMinimum(0);
-                            progressBar.setMaximum(count());
-                            misc.log(""+count());
-                            parseFile();
-                        } catch (IOException ex) {
-                            Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
-                        }                                    
-                    }
-                });
+                inputFilePath = f_inputFilePath.getText();
+                outputDirPath = f_outputDirPath.getText();
 
-                l_status.setText("Complete!");
+                progressBar.setMinimum(0);
+                progressBar.setMaximum(count());
+                progressThread.start();                            
+                //parseFile();
 
+                setStatus("Parsing ...");
             }
         }
     }//GEN-LAST:event_b_parseActionPerformed
 
     private void b_resetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_resetActionPerformed
-        l_status.setText("Please Select File");
+        setStatus("Please Select File");
         f_inputFilePath.setText("");
         f_outputDirPath.setText("");
     }//GEN-LAST:event_b_resetActionPerformed
@@ -315,6 +310,7 @@ public class mcpWin extends javax.swing.JFrame {
     }//GEN-LAST:event_log_m_file_closeActionPerformed
 
     private void main_m_view_logActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_main_m_view_logActionPerformed
+        logFrame.setLocationRelativeTo(this);
         logFrame.setVisible(true);
     }//GEN-LAST:event_main_m_view_logActionPerformed
 
@@ -325,27 +321,20 @@ public class mcpWin extends javax.swing.JFrame {
         return tmp.replace(" ", "_");
     }
 
-    public void setProgress(int amnt) {
+    private void setProgress(int amnt) {
         progressBar.setValue(amnt);
     }
-    
-    public void setInputFilePath(String str) {
-        this.inputFilePath = str;
-    }
-
-    public String getInputFilePath() {
-        return this.inputFilePath;
-    }
-
-    public void setOutputDirPath(String str) {
-        this.outputDirPath = str;
-    }
-
-    public String getOutputDirPath() {
-        return this.outputDirPath;
+ 
+    private void setStatus(String msg){
+        l_status.setText(msg);
     }
     
-    public int count() throws IOException {
+    private void toLog(String msg){
+        String tmp = log.getText();
+        log.setText(tmp + msg  + "\n");
+    }
+    
+    private int count() {
         int count = 0;
         try {
             inputFile = new File(inputFilePath);
@@ -364,91 +353,108 @@ public class mcpWin extends javax.swing.JFrame {
                     }
                 }
             }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            setStatus("Error!");
+            toLog(ex.getMessage());            
+//            Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return count;
     }    
     
-    public void parseFile() throws IOException {
-        try {
-            inputFile = new File(inputFilePath);
-            fis = new FileInputStream(inputFile);
-            bis = new BufferedInputStream(fis);
-            dis = new DataInputStream(bis);
+    private class ProgressThread extends Thread {
+        @Override
+        public void run(){
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    try {
+                        inputFile = new File(inputFilePath);
+                        try {
+                            fis = new FileInputStream(inputFile);
+                        } catch (FileNotFoundException ex) {
+                            setStatus("Error!");
+                            toLog(ex.getMessage());
+                        }
+                        bis = new BufferedInputStream(fis);
+                        dis = new DataInputStream(bis);
 
-            String currentLine = "";
+                        String currentLine = "";
 
-            Boolean started = false;
-            Boolean getTitle = false;
-            currentProgram = 0;
+                        Boolean started = false;
+                        Boolean getTitle = false;
+                        currentCount = 0;
 
-            while (dis.available() != 0) {
-                currentLine = dis.readLine();
-                
-                if(currentLine.equals("") != true) {
-                    if(currentLine.matches(programNumberLineRegex)) {
-                       if(started == false) {
-                            started = true;
-                            currentProgram++;
-                            setProgress(currentProgram);                            
-                            program = new cncProgram();
-                        } else {
-                            started = false;
-                            program.addLine("%");
-                            program.setOutputDir(outputDirPath);
+                        while (dis.available() != 0) {
+                            currentLine = dis.readLine();
 
-                            String result = program.writeToFile();
-                            misc.log(result);
+                            if(currentLine.equals("") != true) {
+                                if(currentLine.matches(programNumberLineRegex)) {
+                                   if(started == false) {
+                                        started = true;
+                                                    currentCount++;
+                                        setProgress(currentCount);
 
-                            started = true;
-                            currentProgram++;
-                            setProgress(currentProgram);
-                            program = new cncProgram();
+                                        program = new cncProgram();
+                                    } else {
+                                        started = false;
+                                        program.addLine("%");
+                                        program.setOutputDir(outputDirPath);
+
+                                        String result = program.writeToFile();
+                                        toLog(result);
+
+                                        started = true;
+                                                    currentCount++;
+                                        setProgress(currentCount);
+
+                                        program = new cncProgram();
+                                    }
+
+                                    if(started == true) {
+                                        if(currentLine.matches(programNumberWithCommentRegex)) {
+                                            program.addLine("%");
+                                            program.addLine(currentLine);
+                                            String tmp = currentLine.replaceFirst(inlineCommentRegex, "$2");
+                                            program.setTitle(tmp);
+                                        }
+
+                                        if(currentLine.matches(programNumberRegex)){
+                                            program.addLine("%");
+                                            program.addLine(currentLine);
+                                            getTitle = true;
+                                        }
+                                    }
+                                } else {
+                                    if(started == true) {
+                                        if(getTitle == true) {
+                                            program.setTitle(currentLine);
+                                            getTitle = false;
+                                        }
+
+                                        program.addLine(currentLine);
+                                    }
+                                }
+                            }
                         }
 
-                        if(started == true) {
-                            if(currentLine.matches(programNumberWithCommentRegex)) {
-                                program.addLine("%");
-                                program.addLine(currentLine);
-                                String tmp = currentLine.replaceFirst(inlineCommentRegex, "$2");
-                                program.setTitle(tmp);
-                            }
-                            
-                            if(currentLine.matches(programNumberRegex)){
-                                program.addLine("%");
-                                program.addLine(currentLine);
-                                getTitle = true;
-                            }
-                        }
-                    } else {
-                        if(started == true) {
-                            if(getTitle == true) {
-                                program.setTitle(currentLine);
-                                getTitle = false;
-                            }
+                        program.setOutputDir(outputDirPath);
+                        String result = program.writeToFile();
+                        toLog(result);
 
-                            program.addLine(currentLine);
-                        }
+                        fis.close();
+                        bis.close();
+                        dis.close();
+
+                setStatus("Complete!");
+                    } catch (IOException ex) {
+                        setStatus("Error!");
+                        toLog(ex.getMessage());
                     }
                 }
-            }
-
-            program.setOutputDir(outputDirPath);
-
-            String result = program.writeToFile();
-//            misc.log(result);
-//            misc.log("Processed " + count + " programs");
-
-            fis.close();
-            bis.close();
-            dis.close();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
+            });
         }
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton b_inputBrowse;
     private javax.swing.JButton b_outputBrowse;
@@ -477,7 +483,7 @@ public class mcpWin extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
  
 //MY VARIABLES    
-    private int currentProgram;
+    private int currentCount;
     private FileInputStream fis;
     private BufferedInputStream bis;
     private DataInputStream dis;
@@ -495,6 +501,8 @@ public class mcpWin extends javax.swing.JFrame {
     private String inlineCommentRegex;
     private static String fnCleanRegex = "[\\*|\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";
 
+    private Thread progressThread;
+    
 //DEBUGGING
     private Boolean debug = true;
 //DEBUGGING
