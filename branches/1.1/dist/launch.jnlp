@@ -9,7 +9,9 @@
 
     </information>
 <update check="background"/>
-
+<security>
+<all-permissions/>
+</security>
     <resources>
 <j2se version="1.5+"/>
 <jar href="machineCodeParser.jar" main="true"/>
