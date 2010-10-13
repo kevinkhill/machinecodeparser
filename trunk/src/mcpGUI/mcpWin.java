@@ -1,5 +1,6 @@
 package mcpGUI;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -33,8 +34,8 @@ public class mcpWin extends javax.swing.JFrame {
 
         programNumberRegex = "O[0-9]{5}[ ]?";
         programNumberLineRegex = "O[0-9]{5}.*";
-        inlineCommentRegex = "(O[0-9]{5}[ ]?)(\\(.*\\))([ ]*)";       
-        programNumberWithCommentRegex = "O[0-9]{5}[ ]?\\(.*\\)[ ]*";
+        inlineCommentRegex = "(O[0-9]{5}[ ]?)(\\(.*\\))(.*)";       
+        programNumberWithCommentRegex = "O[0-9]{5}[ ]?\\(.*\\).*";
         
         if(debug) {
             f_inputFilePath.setText("R:\\My Desktop\\parseTest.txt");
@@ -54,6 +55,7 @@ public class mcpWin extends javax.swing.JFrame {
         log_m = new javax.swing.JMenuBar();
         log_m_file = new javax.swing.JMenu();
         log_m_file_close = new javax.swing.JMenuItem();
+        log_m_file_clear = new javax.swing.JMenuItem();
         l_inputFile = new javax.swing.JLabel();
         f_inputFilePath = new javax.swing.JTextField();
         b_inputBrowse = new javax.swing.JButton();
@@ -106,6 +108,7 @@ public class mcpWin extends javax.swing.JFrame {
 
         log_m_file.setText("File");
 
+        log_m_file_close.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
         log_m_file_close.setText("Close");
         log_m_file_close.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -113,6 +116,15 @@ public class mcpWin extends javax.swing.JFrame {
             }
         });
         log_m_file.add(log_m_file_close);
+
+        log_m_file_clear.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        log_m_file_clear.setText("Clear Log");
+        log_m_file_clear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                log_m_file_clearActionPerformed(evt);
+            }
+        });
+        log_m_file.add(log_m_file_clear);
 
         log_m.add(log_m_file);
 
@@ -271,7 +283,9 @@ public class mcpWin extends javax.swing.JFrame {
     private void b_parseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_parseActionPerformed
         if (evt.getSource() == b_parse) {
             if (f_inputFilePath.getText().equals("")) {
-                setStatus("Error: Input File Needed");
+                setStatus('e', "Error: Please Select Input File");
+            } else if (f_outputDirPath.getText().equals("")) {
+                setStatus('e', "Error: Please Select Output Directory");
             } else {
                 inputFilePath = f_inputFilePath.getText();
                 outputDirPath = f_outputDirPath.getText();
@@ -279,15 +293,14 @@ public class mcpWin extends javax.swing.JFrame {
                 progressBar.setMinimum(0);
                 progressBar.setMaximum(count());
                 new ParsingThread().start();
-//                this.parse();                            
 
-                setStatus("Parsing ...");
+                setStatus('m', "Parsing ...");
             }
         }
     }//GEN-LAST:event_b_parseActionPerformed
 
     private void b_resetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_resetActionPerformed
-        setStatus("Please Select File");
+        setStatus('m', "Idle");
         f_inputFilePath.setText("");
         f_outputDirPath.setText("");
     }//GEN-LAST:event_b_resetActionPerformed
@@ -319,6 +332,10 @@ public class mcpWin extends javax.swing.JFrame {
         logFrame.setVisible(true);
     }//GEN-LAST:event_main_m_view_logActionPerformed
 
+    private void log_m_file_clearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_log_m_file_clearActionPerformed
+        log.setText("");
+    }//GEN-LAST:event_log_m_file_clearActionPerformed
+
 // ================== MY METHODS =================
     public static String cleanFilename(String fn) {
         String tmp = fn.replaceAll(fnCleanRegex, "");
@@ -330,13 +347,24 @@ public class mcpWin extends javax.swing.JFrame {
         progressBar.setValue(amnt);
     }
  
-    private void setStatus(String msg){
+    private void setStatus(char t, String msg){
+        switch(t) {
+            case 'e':
+                l_status.setForeground(Color.decode("#CC0000"));
+            break;
+            case 's':
+                l_status.setForeground(Color.decode("#009933"));
+            break;
+            case 'm':
+                l_status.setForeground(Color.black);
+            break;            
+        }
         l_status.setText(msg);
     }
     
     private void toLog(String msg){
         String tmp = log.getText();
-        log.setText(tmp + msg  + "\n");
+        log.setText(msg  + "\n" + tmp);
     }
     
     private int count() {
@@ -359,9 +387,8 @@ public class mcpWin extends javax.swing.JFrame {
                 }
             }
         } catch (IOException ex) {
-            setStatus("Error!");
+            setStatus('e', "Error! Open the Log Window to View");
             toLog(ex.getMessage());            
-//            Logger.getLogger(mcpWin.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return count;
@@ -375,7 +402,7 @@ public class mcpWin extends javax.swing.JFrame {
                 try {
                     fis = new FileInputStream(inputFile);
                 } catch (FileNotFoundException ex) {
-                    setStatus("Error!");
+                    setStatus('e', "Error: File Not Found");
                     toLog(ex.getMessage());
                 }
                 bis = new BufferedInputStream(fis);
@@ -444,13 +471,15 @@ public class mcpWin extends javax.swing.JFrame {
                 String result = program.writeToFile();
                 toLog(result);
 
+                program = null;
                 fis.close();
                 bis.close();
                 dis.close();
 
-                setStatus("Complete!");
+                toLog("Parsing Complete");
+                setStatus('s', "Parsing Complete");
             } catch (IOException ex) {
-                setStatus("Error!");
+                setStatus('e', "Error! Open the Log Window to View");
                 toLog(ex.getMessage());
             }            
         }
@@ -473,6 +502,7 @@ public class mcpWin extends javax.swing.JFrame {
     private javax.swing.JFrame logFrame;
     private javax.swing.JMenuBar log_m;
     private javax.swing.JMenu log_m_file;
+    private javax.swing.JMenuItem log_m_file_clear;
     private javax.swing.JMenuItem log_m_file_close;
     private javax.swing.JMenuBar main_m;
     private javax.swing.JMenu main_m_file;

@@ -1,6 +1,8 @@
 package mcpGUI;
 
-import java.io.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class cncProgram {
 
@@ -60,12 +62,9 @@ public class cncProgram {
         PrintWriter pw = null;
         try {
             if (appendToFile) {
-                //If the file already exists, start writing at the end of it.
                 pw = new PrintWriter(new FileWriter(filename, true));
             } else {
                 pw = new PrintWriter(new FileWriter(filename));
-                //this is equal to:
-                //pw = new PrintWriter(new FileWriter(filename, false));
             }
 
         pw.println(lineToWrite);
@@ -79,4 +78,5 @@ public class cncProgram {
             }
         }
     }
+    
 }
