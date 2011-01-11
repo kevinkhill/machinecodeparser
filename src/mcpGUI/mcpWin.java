@@ -387,7 +387,7 @@ public class mcpWin extends javax.swing.JFrame {
                 }
             }
         } catch (IOException ex) {
-            setStatus('e', "Error! Open the Log Window to View");
+            setStatus('e', "Error: Check Log Window");
             toLog(ex.getMessage());            
         }
         
@@ -479,7 +479,7 @@ public class mcpWin extends javax.swing.JFrame {
                 toLog("Parsing Complete");
                 setStatus('s', "Parsing Complete");
             } catch (IOException ex) {
-                setStatus('e', "Error! Open the Log Window to View");
+                setStatus('e', "Error: Check Log Window");
                 toLog(ex.getMessage());
             }            
         }
@@ -533,6 +533,6 @@ public class mcpWin extends javax.swing.JFrame {
     private static String fnCleanRegex = "[\\*|\\(|\\)|\\;|\\:|\\?|\\>|\\<|\\/|\\.]";
 
 //DEBUGGING
-    private Boolean debug = true;
+    private Boolean debug = false;
 //DEBUGGING
 }
